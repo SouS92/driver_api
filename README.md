@@ -39,7 +39,7 @@ _NOTE: Please DO NOT publish the project, e.g. by uploading it to GitHub or the 
  * Extend the DriverController to enable drivers to select a car they are driving with.
  * Extend the DriverController to enable drivers to deselect a car.
  * Extend the DriverDo to map the selected car to the driver.
- * Add example data to resources/data.sql
+ * Add example data to resources/V1__init_db.sql
 
 ---
 
