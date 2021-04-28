@@ -4,6 +4,7 @@ import com.freenow.controller.mapper.DriverMapper;
 import com.freenow.datatransferobject.DriverDTO;
 import com.freenow.domainobject.DriverDO;
 import com.freenow.domainvalue.OnlineStatus;
+import com.freenow.exception.CarAlreadyInUseException;
 import com.freenow.exception.ConstraintsViolationException;
 import com.freenow.exception.EntityNotFoundException;
 import com.freenow.service.driver.DriverService;
@@ -72,6 +73,17 @@ public class DriverController
         driverService.updateLocation(driverId, longitude, latitude);
     }
 
+    @PutMapping("/{driverId}/link/{licensePlate}")
+    public void rentCar(@PathVariable long driverId, @PathVariable String licensePlate)
+        throws EntityNotFoundException, CarAlreadyInUseException {
+        driverService.rentCar(driverId,licensePlate);
+    }
+
+    @PutMapping("/{driverId}/unlink")
+    public void releaseCar(@PathVariable long driverId)
+            throws EntityNotFoundException{
+        driverService.releaseCar(driverId);
+    }
 
     @GetMapping
     public List<DriverDTO> findDrivers(@RequestParam OnlineStatus onlineStatus)

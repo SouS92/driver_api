@@ -34,4 +34,8 @@ public class CarDO {
 
     private EngineType engineType;
 
+    private Manufacturer manufacturer;
+
+    @OneToOne(mappedBy = "car")
+    private DriverDO driver;
 }

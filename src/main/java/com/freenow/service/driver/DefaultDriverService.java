@@ -1,34 +1,37 @@
 package com.freenow.service.driver;
 
 import com.freenow.dataaccessobject.DriverRepository;
+import com.freenow.domainobject.CarDO;
 import com.freenow.domainobject.DriverDO;
 import com.freenow.domainvalue.GeoCoordinate;
 import com.freenow.domainvalue.OnlineStatus;
+import com.freenow.exception.CarAlreadyInUseException;
 import com.freenow.exception.ConstraintsViolationException;
 import com.freenow.exception.EntityNotFoundException;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Service to encapsulate the link between DAO and controller and to have business logic for some driver specific things.
  * <p/>
  */
 @Service
-public class DefaultDriverService implements DriverService
-{
+public class DefaultDriverService implements DriverService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDriverService.class);
 
     private final DriverRepository driverRepository;
 
+    private final CarService carService;
 
-    public DefaultDriverService(final DriverRepository driverRepository)
-    {
+    public DefaultDriverService(final DriverRepository driverRepository, CarService carService) {
         this.driverRepository = driverRepository;
+        this.carService = carService;
     }
 
 
@@ -40,8 +43,7 @@ public class DefaultDriverService implements DriverService
      * @throws EntityNotFoundException if no driver with the given id was found.
      */
     @Override
-    public DriverDO find(Long driverId) throws EntityNotFoundException
-    {
+    public DriverDO find(Long driverId) throws EntityNotFoundException {
         return findDriverChecked(driverId);
     }
 
@@ -54,15 +56,11 @@ public class DefaultDriverService implements DriverService
      * @throws ConstraintsViolationException if a driver already exists with the given username, ... .
      */
     @Override
-    public DriverDO create(DriverDO driverDO) throws ConstraintsViolationException
-    {
+    public DriverDO create(DriverDO driverDO) throws ConstraintsViolationException {
         DriverDO driver;
-        try
-        {
+        try {
             driver = driverRepository.save(driverDO);
-        }
-        catch (DataIntegrityViolationException e)
-        {
+        } catch (DataIntegrityViolationException e) {
             LOG.warn("ConstraintsViolationException while creating a driver: {}", driverDO, e);
             throw new ConstraintsViolationException(e.getMessage());
         }
@@ -78,8 +76,7 @@ public class DefaultDriverService implements DriverService
      */
     @Override
     @Transactional
-    public void delete(Long driverId) throws EntityNotFoundException
-    {
+    public void delete(Long driverId) throws EntityNotFoundException {
         DriverDO driverDO = findDriverChecked(driverId);
         driverDO.setDeleted(true);
     }
@@ -95,8 +92,7 @@ public class DefaultDriverService implements DriverService
      */
     @Override
     @Transactional
-    public void updateLocation(long driverId, double longitude, double latitude) throws EntityNotFoundException
-    {
+    public void updateLocation(long driverId, double longitude, double latitude) throws EntityNotFoundException {
         DriverDO driverDO = findDriverChecked(driverId);
         driverDO.setCoordinate(new GeoCoordinate(latitude, longitude));
     }
@@ -108,16 +104,38 @@ public class DefaultDriverService implements DriverService
      * @param onlineStatus
      */
     @Override
-    public List<DriverDO> find(OnlineStatus onlineStatus)
-    {
+    public List<DriverDO> find(OnlineStatus onlineStatus) {
         return driverRepository.findByOnlineStatus(onlineStatus);
     }
 
 
-    private DriverDO findDriverChecked(Long driverId) throws EntityNotFoundException
-    {
+    private DriverDO findDriverChecked(Long driverId) throws EntityNotFoundException {
         return driverRepository.findById(driverId)
-            .orElseThrow(() -> new EntityNotFoundException("Could not find entity with id: " + driverId));
+                .orElseThrow(() -> new EntityNotFoundException("Could not find entity with id: " + driverId));
+    }
+
+    @Override
+    @Transactional
+    public void rentCar(Long driverId, String licensePlate) throws EntityNotFoundException, CarAlreadyInUseException {
+        synchronized (this) {
+            DriverDO driverDO = findDriverChecked(driverId);
+            CarDO carDO = carService.getCarByLicensePlate(licensePlate);
+
+            if (carDO.getDriver() != null)
+                throw new CarAlreadyInUseException(String.format("Car %s already linked", carDO.getLicensePlate()));
+
+            driverDO.setCar(carDO);
+        }
+
+    }
+
+    @Override
+    @Transactional
+    public void releaseCar(Long driverId) throws EntityNotFoundException {
+        synchronized (this) {
+            DriverDO driverDO = findDriverChecked(driverId);
+            driverDO.setCar(null);
+        }
     }
 
 }
