@@ -1,6 +1,7 @@
 package com.freenow.service.driver;
 
 import com.freenow.dataaccessobject.DriverRepository;
+import com.freenow.datatransferobject.DriverSearch;
 import com.freenow.domainobject.CarDO;
 import com.freenow.domainobject.DriverDO;
 import com.freenow.domainvalue.GeoCoordinate;
@@ -13,7 +14,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.SerializationUtils;
+import org.springframework.util.StringUtils;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.*;
 import java.util.List;
 
 /**
@@ -29,9 +34,12 @@ public class DefaultDriverService implements DriverService {
 
     private final CarService carService;
 
-    public DefaultDriverService(final DriverRepository driverRepository, CarService carService) {
+    private final EntityManager entityManager;
+
+    public DefaultDriverService(final DriverRepository driverRepository, CarService carService, EntityManager entityManager) {
         this.driverRepository = driverRepository;
         this.carService = carService;
+        this.entityManager = entityManager;
     }
 
 
@@ -136,6 +144,33 @@ public class DefaultDriverService implements DriverService {
             DriverDO driverDO = findDriverChecked(driverId);
             driverDO.setCar(null);
         }
+    }
+
+    @Override
+    public List<DriverDO> findByCriteriaBuilder(DriverSearch driverSearch) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<DriverDO> query = cb.createQuery(DriverDO.class);
+        Root<DriverDO> root = query.from(DriverDO.class);
+        Join<DriverDO, CarDO> joinUser = root.join("car", JoinType.LEFT);
+
+        if (!StringUtils.isEmpty(driverSearch.getUsername()))
+            query.where(cb.equal(root.get("username"), driverSearch.getUsername()));
+
+        if (driverSearch.getOnlineStatus() != null)
+            query.where(cb.equal(root.get("onlineStatus"), driverSearch.getOnlineStatus()));
+
+        if (!StringUtils.isEmpty(driverSearch.getLicensePlate()))
+            query.where(cb.like(joinUser.get("licensePlate"), driverSearch.getLicensePlate()));
+
+        if (driverSearch.getManufacturer() != null)
+            query.where(cb.equal(joinUser.get("manufacturer"), driverSearch.getManufacturer()));
+
+        if (!StringUtils.isEmpty(driverSearch.getRating()))
+            query.where(cb.equal(joinUser.get("rating"), driverSearch.getRating()));
+
+
+        return entityManager.createQuery(query).getResultList();
+
     }
 
 }

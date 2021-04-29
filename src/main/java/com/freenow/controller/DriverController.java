@@ -2,6 +2,7 @@ package com.freenow.controller;
 
 import com.freenow.controller.mapper.DriverMapper;
 import com.freenow.datatransferobject.DriverDTO;
+import com.freenow.datatransferobject.DriverSearch;
 import com.freenow.domainobject.DriverDO;
 import com.freenow.domainvalue.OnlineStatus;
 import com.freenow.exception.CarAlreadyInUseException;
@@ -83,6 +84,11 @@ public class DriverController
     public void releaseCar(@PathVariable long driverId)
             throws EntityNotFoundException{
         driverService.releaseCar(driverId);
+    }
+
+    @PostMapping("/search")
+    public List<DriverDTO> searchDrivers(@RequestBody DriverSearch driverSearch){
+        return DriverMapper.makeDriverDTOList(driverService.findByCriteriaBuilder(driverSearch));
     }
 
     @GetMapping

@@ -1,5 +1,6 @@
 package com.freenow.service.driver;
 
+import com.freenow.datatransferobject.DriverSearch;
 import com.freenow.domainobject.DriverDO;
 import com.freenow.domainvalue.OnlineStatus;
 import com.freenow.exception.CarAlreadyInUseException;
@@ -23,5 +24,7 @@ public interface DriverService {
     void rentCar(Long driverId, String licensePlate) throws EntityNotFoundException, CarAlreadyInUseException;
 
     void releaseCar(Long driverId) throws EntityNotFoundException;
+
+    List<DriverDO> findByCriteriaBuilder(DriverSearch driverSearch);
 
 }
