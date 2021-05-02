@@ -3,17 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.freenow</groupId>
-    <artifactId>freenow_server_applicant_test</artifactId>
+    <groupId>io.housedevinci</groupId>
+    <artifactId>driver_api</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>freenow applicant test</name>
-    <description>Test project backend/server applicants.</description>
+    <name>Driver API</name>
+    <description>Driver API based on Spring Boot</description>
 
     <organization>
-        <name>Intelligent Apps GmbH</name>
-        <url>https://www.free-now.com</url>
+        <name>House Devinci</name>
+        <url>https://www.housedevinci.com</url>
     </organization>
 
     <parent>
@@ -30,7 +30,7 @@
         <io.springfox.springfox.version>2.9.2</io.springfox.springfox.version>
         <flyway.user>admin</flyway.user>
         <flyway.password>password</flyway.password>
-        <flyway.schemas>freenowdb</flyway.schemas>
+        <flyway.schemas>driverapidb</flyway.schemas>
     </properties>
 
     <dependencies>
@@ -104,11 +104,11 @@
                 </executions>
                 <configuration>
                     <driver>org.h2.Driver</driver>
-                    <url>jdbc:h2:mem:freenowdb</url>
+                    <url>jdbc:h2:mem:driverapidb</url>
                     <user>admin</user>
                     <password>password</password>
                     <baselineOnMigrate>true</baselineOnMigrate>
-                    <schemas>freenowdb</schemas>
+                    <schemas>driverapidb</schemas>
                     <locations>
                         <location>
                             filesystem:src/main/resources/db/migration
